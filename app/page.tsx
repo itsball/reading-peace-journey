@@ -32,7 +32,7 @@ export default function Home() {
         <div className="check-card">
           <label>你的姓名<input value={name} onChange={e => setName(e.target.value)} placeholder="輸入姓名" /></label>
           <label>目前讀到<select value={chapter} onChange={e => setChapter(Number(e.target.value))}>{chapters.map((c,i)=><option key={c} value={i+1}>第 {i+1} 章｜{c}</option>)}</select></label>
-          <div className="moods"><span>今天的閱讀心情（選填）</span><div><button>🙂</button><button>😮</button><button>😢</button><button>🤔</button></div></div>
+          <div className="moods"><span>今天的閱讀心情（選填）</span><div><button aria-label="平靜">🙂</button><button aria-label="驚訝">😮</button><button aria-label="感動">😢</button><button aria-label="思考">🤔</button></div></div>
           <button className="submit" onClick={() => setCheckedIn(true)}>今天讀了一點</button>
           {checkedIn && <p className="success">✓ {name || "閱讀夥伴"}，你已為全團點亮第 {chapter} 站！</p>}
         </div>
