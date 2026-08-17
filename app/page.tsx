@@ -75,7 +75,7 @@ export default function Home() {
   return (
     <main>
       <section className="hero">
-        <nav><span className="brand">CGM合唱團 · 共讀遠征</span><a href="#checkin">今日登錄</a><a href="#journey">閱讀地圖</a><a href="#souvenirs">閱讀徽章</a><a href="#together">全團進度</a></nav>
+        <nav><span className="brand">CGM合唱團 · 2026十月榮耀神</span><a href="#checkin">今日登錄</a><a href="#journey">閱讀地圖</a><a href="#souvenirs">閱讀徽章</a><a href="#together">全團進度</a></nav>
         <div className="hero-copy">
           <p className="eyebrow">CGM CHOIR · OCTOBER 2026</p>
           <h1>翻開書，走向<br/><em>愛與和平</em></h1>
@@ -128,7 +128,7 @@ export default function Home() {
       </section>
 
       <section className="book section"><div><p className="eyebrow">OUR BOOK</p><h2>《戰爭是殘忍的。<br/>愛與和平》</h2><p>鄭明析 著 · 特別精華版 · 448頁</p></div><blockquote>「比起殺人無數的英雄，救人無數的人才是更了不起的英雄。」</blockquote></section>
-      <footer>CGM合唱團 · 2026十月共讀遠征 <span>一起翻頁，一起走向音樂會。</span></footer>
+      <footer>CGM合唱團 · 2026十月榮耀神 <span>一起翻頁，一起走向音樂會。</span></footer>
     </main>
   );
 }
