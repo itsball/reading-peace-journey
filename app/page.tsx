@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const chapters = [
   "從入伍到派越", "打稻穀，愛居民的作戰", "去愛吧", "烏鵲橋作戰",
@@ -21,7 +21,29 @@ export default function Home() {
   const [checkedIn, setCheckedIn] = useState(false);
   const progress = useMemo(() => Math.round((chapter / chapters.length) * 100), [chapter]);
 
+  useEffect(() => {
+    void document.fonts.ready;
+    milestones.forEach(item => {
+      const image = new Image();
+      image.src = `/keepsake-${item.at}-illustration.png`;
+    });
+  }, []);
+
   const downloadKeepsake = async (item: typeof milestones[number]) => {
+    const filename = `CGM閱讀紀念圖卡-${item.at}-${name.trim() || "閱讀夥伴"}.png`;
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const shareNavigator = navigator as Navigator & {
+      canShare?: (data: ShareData) => boolean;
+      share?: (data: ShareData) => Promise<void>;
+    };
+    const shareProbe = new File([new Uint8Array(1)], filename, { type: "image/png" });
+    const canShareFile = Boolean(isMobile && shareNavigator.share && shareNavigator.canShare?.({ files: [shareProbe] }));
+    const fallbackWindow = isMobile && !canShareFile ? window.open("", "_blank") : null;
+    if (fallbackWindow) {
+      fallbackWindow.document.title = "圖卡產生中";
+      fallbackWindow.document.body.innerHTML = "<p style='font:16px sans-serif;padding:24px'>圖卡產生中，請稍候…</p>";
+    }
+
     await document.fonts.ready;
     const canvas = document.createElement("canvas");
     canvas.width = 1200;
@@ -103,10 +125,34 @@ export default function Home() {
     ctx.lineWidth = 2;
     ctx.strokeRect(30, 30, canvas.width - 60, canvas.height - 60);
 
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(result => result ? resolve(result) : reject(new Error("圖卡產生失敗")), "image/png");
+    });
+    const file = new File([blob], filename, { type: "image/png" });
+
+    if (canShareFile && shareNavigator.share) {
+      try {
+        await shareNavigator.share({ files: [file], title: item.title });
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+      }
+    }
+
+    const objectUrl = URL.createObjectURL(blob);
+    if (fallbackWindow) {
+      fallbackWindow.location.href = objectUrl;
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+      return;
+    }
+
     const link = document.createElement("a");
-    link.download = `CGM閱讀紀念圖卡-${item.at}-${name.trim() || "閱讀夥伴"}.png`;
-    link.href = canvas.toDataURL("image/png");
+    link.download = filename;
+    link.href = objectUrl;
+    document.body.appendChild(link);
     link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 10_000);
   };
 
   return (
