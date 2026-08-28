@@ -36,8 +36,11 @@ nav a { font-size:13px; font-weight:700; }
 .check-card input,.check-card select { border:1px solid rgba(35,70,59,.36); padding:15px; color:var(--ink); background:rgba(255,255,255,.55); font-size:16px; }
 .moods { display:flex; justify-content:space-between; align-items:center; font:700 13px "Noto Sans TC",sans-serif; }
 .moods button { border:1px solid var(--line); background:#eef2df; padding:9px; margin-left:5px; font-size:19px; cursor:pointer; }
+.moods button.selected { border-color:var(--deep); background:#f5d777; box-shadow:0 0 0 2px rgba(78,91,59,.18); }
 .submit { width:100%; font-size:16px; }
+.submit:disabled { opacity:.65; cursor:wait; }
 .success { background:#e5edd0; border-left:4px solid var(--leaf); padding:14px; margin:0; font-weight:700; }
+.error { background:#f2d9cc; border-left:4px solid var(--coral); padding:14px; margin:0; font-weight:700; }
 .my-progress { padding:38px; color:var(--cream); border:1px solid var(--deep); background:var(--leaf); background-image:radial-gradient(circle at 90% 10%,rgba(255,255,255,.15),transparent 32%); box-shadow:inset 0 0 0 9px rgba(255,255,255,.06); }
 .my-progress>span { font:700 13px "Noto Sans TC",sans-serif; }
 .my-progress>strong { display:block; font:800 76px "Noto Sans TC",sans-serif; margin:25px 0; color:#f5d777; }
@@ -93,6 +96,17 @@ nav a { font-size:13px; font-weight:700; }
 .book blockquote { font-size:29px; line-height:1.6; margin:0; border-left:4px solid var(--deep); padding-left:30px; }
 footer { background:var(--deep); color:white; padding:35px 8vw; display:flex; justify-content:space-between; font:800 14px "Noto Sans TC",sans-serif; }
 footer span { font-weight:400; color:#c3d8cd; }
+
+.admin { min-height:100vh; padding:70px 6vw; background:var(--cream); }
+.admin>section { max-width:1120px; margin:auto; }
+.admin-head { display:flex; justify-content:space-between; align-items:end; gap:30px; margin-bottom:32px; }
+.admin h1 { font-size:clamp(38px,6vw,68px); margin:8px 0; }
+.admin-head a,.admin>section>a { padding:12px 18px; border:1px solid var(--deep); font:800 13px "Noto Sans TC",sans-serif; white-space:nowrap; }
+.admin-table-wrap { overflow-x:auto; border:1px solid var(--line); background:white; }
+.admin table { width:100%; border-collapse:collapse; min-width:700px; }
+.admin th,.admin td { padding:18px 20px; border-bottom:1px solid var(--line); text-align:left; font-family:"Noto Sans TC",sans-serif; }
+.admin th { background:var(--leaf); color:white; font-size:13px; }
+.admin-empty { padding:30px; text-align:center; }
 
 @media(max-width:900px) {
   nav a { display:none; }

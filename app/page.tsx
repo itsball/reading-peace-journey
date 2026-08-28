@@ -18,7 +18,11 @@ const milestones = [
 export default function Home() {
   const [name, setName] = useState("");
   const [chapter, setChapter] = useState(1);
+  const [mood, setMood] = useState<string | null>(null);
   const [checkedIn, setCheckedIn] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState("");
+  const [stats, setStats] = useState({ weeklyPartners: 0, total: 0, groupChapter: 1 });
   const progress = useMemo(() => Math.round((chapter / chapters.length) * 100), [chapter]);
 
   useEffect(() => {
@@ -27,7 +31,22 @@ export default function Home() {
       const image = new Image();
       image.src = `/keepsake-${item.at}-illustration.png`;
     });
+    fetch("/api/checkins").then(response => response.json()).then(setStats).catch(() => undefined);
   }, []);
+
+  const submitCheckin = async () => {
+    if (!name.trim()) { setMessage("請先輸入姓名。"); return; }
+    setSubmitting(true); setMessage(""); setCheckedIn(false);
+    try {
+      const response = await fetch("/api/checkins", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name, chapter, mood }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "登錄失敗，請稍後再試。");
+      setCheckedIn(true);
+      const refreshed = await fetch("/api/checkins").then(result => result.json());
+      setStats(refreshed);
+    } catch (error) { setMessage(error instanceof Error ? error.message : "登錄失敗，請稍後再試。"); }
+    finally { setSubmitting(false); }
+  };
 
   const downloadKeepsake = async (item: typeof milestones[number]) => {
     const filename = `CGM閱讀紀念圖卡-${item.at}-${name.trim() || "閱讀夥伴"}.png`;
@@ -60,8 +79,12 @@ export default function Home() {
       art.onerror = () => reject(new Error("圖卡插畫載入失敗"));
     });
     const artHeight = 720;
-    const artSourceY = item.at === 50 || item.at === 75 ? 90 : 0;
-    ctx.drawImage(art, 0, artSourceY, canvas.width, artHeight, 0, 0, canvas.width, artHeight);
+    const destinationRatio = canvas.width / artHeight;
+    const sourceWidth = art.naturalWidth;
+    const sourceHeight = sourceWidth / destinationRatio;
+    const availableOffset = Math.max(0, art.naturalHeight - sourceHeight);
+    const sourceY = item.at === 50 || item.at === 75 ? Math.min(110, availableOffset) : 0;
+    ctx.drawImage(art, 0, sourceY, sourceWidth, sourceHeight, 0, 0, canvas.width, artHeight);
     ctx.fillStyle = "#f0e4c8";
     ctx.fillRect(0, artHeight, canvas.width, canvas.height - artHeight);
     const artFade = ctx.createLinearGradient(0, 560, 0, artHeight);
@@ -173,9 +196,10 @@ export default function Home() {
         <div className="check-card">
           <label>你的姓名<input value={name} onChange={e => setName(e.target.value)} placeholder="輸入姓名" /></label>
           <label>目前讀到<select value={chapter} onChange={e => setChapter(Number(e.target.value))}>{chapters.map((c,i)=><option key={c} value={i+1}>第 {i+1} 章｜{c}</option>)}</select></label>
-          <div className="moods"><span>今天的閱讀心情（選填）</span><div><button aria-label="平靜">🙂</button><button aria-label="驚訝">😮</button><button aria-label="感動">😢</button><button aria-label="思考">🤔</button></div></div>
-          <button className="submit" onClick={() => setCheckedIn(true)}>今天讀了一點</button>
+          <div className="moods"><span>今天的閱讀心情（選填）</span><div>{[["平靜","🙂"],["驚訝","😮"],["感動","😢"],["思考","🤔"]].map(([label, icon]) => <button type="button" className={mood === label ? "selected" : ""} aria-pressed={mood === label} aria-label={label} key={label} onClick={() => setMood(mood === label ? null : label)}>{icon}</button>)}</div></div>
+          <button className="submit" disabled={submitting} onClick={submitCheckin}>{submitting ? "登錄中…" : "今天讀了一點"}</button>
           {checkedIn && <p className="success">✓ {name || "閱讀夥伴"}，你已為全團點亮第 {chapter} 站！</p>}
+          {message && <p className="error">{message}</p>}
         </div>
         <aside className="my-progress"><span>目前旅程</span><strong>{progress}%</strong><div className="bar"><i style={{width:`${progress}%`}} /></div><p>已抵達：{chapters[chapter-1]}</p></aside>
       </section>
@@ -206,8 +230,8 @@ export default function Home() {
 
       <section id="together" className="together section">
         <div className="section-heading"><p className="eyebrow">READ TOGETHER</p><h2>我們一起走了多遠</h2></div>
-        <div className="stats"><article><strong>24</strong><span>本週閱讀夥伴</span></article><article><strong>86</strong><span>累積閱讀足跡</span></article><article><strong>第 4 站</strong><span>全團目前位置</span></article></div>
-        <div className="unlock"><span>下一個共同解鎖</span><strong>再累積 14 次閱讀，點亮「和平之燈」</strong><div className="bar"><i style={{width:"86%"}} /></div></div>
+        <div className="stats"><article><strong>{stats.weeklyPartners}</strong><span>本週閱讀夥伴</span></article><article><strong>{stats.total}</strong><span>累積閱讀足跡</span></article><article><strong>第 {stats.groupChapter} 站</strong><span>全團目前位置</span></article></div>
+        <div className="unlock"><span>下一個共同解鎖</span><strong>{stats.total >= 100 ? "「和平之燈」已點亮" : `再累積 ${100 - stats.total} 次閱讀，點亮「和平之燈」`}</strong><div className="bar"><i style={{width:`${Math.min(100, stats.total)}%`}} /></div></div>
       </section>
 
       <section className="book section"><div><p className="eyebrow">OUR BOOK</p><h2>《戰爭是殘忍的。<br/>愛與和平》</h2><p>鄭明析 著 · 特別精華版 · 448頁</p></div><blockquote>「比起殺人無數的英雄，救人無數的人才是更了不起的英雄。」</blockquote></section>

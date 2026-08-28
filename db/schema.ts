@@ -1,4 +1,13 @@
-// Intentionally empty by default.
-// Add Drizzle tables here when the site actually needs a database.
-// See examples/d1/db/schema.ts for an opt-in example.
-export {};
+import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+
+export const readingCheckins = sqliteTable("reading_checkins", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  participantName: text("participant_name").notNull(),
+  participantKey: text("participant_key").notNull(),
+  chapter: integer("chapter").notNull(),
+  mood: text("mood"),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+}, table => [
+  index("reading_checkins_participant_key_idx").on(table.participantKey),
+  index("reading_checkins_created_at_idx").on(table.createdAt),
+]);
