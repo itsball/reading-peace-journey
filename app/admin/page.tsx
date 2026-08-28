@@ -10,7 +10,7 @@ type Participant = {
 
 export default async function AdminPage() {
   const user = await requireChatGPTUser("/admin");
-  if (!env.ADMIN_USER_ID || user.userId !== env.ADMIN_USER_ID) {
+  if (!env.ADMIN_EMAIL || user.email.toLocaleLowerCase() !== env.ADMIN_EMAIL.toLocaleLowerCase()) {
     return <main className="admin"><section><h1>無法查看名單</h1><p>這個頁面只開放給活動管理員。</p><a href={chatGPTSignOutPath("/admin")}>切換帳號</a></section></main>;
   }
 
