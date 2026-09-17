@@ -12,11 +12,17 @@ export async function GET() {
       COALESCE(ROUND(AVG(chapter)), 0) AS group_chapter
     FROM reading_checkins
   `).bind(weekAgo).first<{ total: number; weekly_partners: number; group_chapter: number }>();
+  const completions = await env.DB.prepare(`
+    SELECT COUNT(*) AS total_rounds, COUNT(DISTINCT participant_key) AS completed_readers
+    FROM reading_completions
+  `).first<{ total_rounds: number; completed_readers: number }>();
 
   return Response.json({
     total: Number(stats?.total ?? 0),
     weeklyPartners: Number(stats?.weekly_partners ?? 0),
     groupChapter: Math.max(1, Math.min(10, Number(stats?.group_chapter ?? 1))),
+    totalRounds: Number(completions?.total_rounds ?? 0),
+    completedReaders: Number(completions?.completed_readers ?? 0),
   });
 }
 

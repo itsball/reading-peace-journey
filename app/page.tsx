@@ -21,8 +21,10 @@ export default function Home() {
   const [mood, setMood] = useState<string | null>(null);
   const [checkedIn, setCheckedIn] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [completing, setCompleting] = useState(false);
+  const [completedRound, setCompletedRound] = useState<number | null>(null);
   const [message, setMessage] = useState("");
-  const [stats, setStats] = useState({ weeklyPartners: 0, total: 0, groupChapter: 1 });
+  const [stats, setStats] = useState({ weeklyPartners: 0, total: 0, groupChapter: 1, totalRounds: 0, completedReaders: 0 });
   const progress = useMemo(() => Math.round((chapter / chapters.length) * 100), [chapter]);
 
   useEffect(() => {
@@ -36,7 +38,7 @@ export default function Home() {
 
   const submitCheckin = async () => {
     if (!name.trim()) { setMessage("請先輸入姓名。"); return; }
-    setSubmitting(true); setMessage(""); setCheckedIn(false);
+    setSubmitting(true); setMessage(""); setCheckedIn(false); setCompletedRound(null);
     try {
       const response = await fetch("/api/checkins", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name, chapter, mood }) });
       const data = await response.json();
@@ -47,6 +49,21 @@ export default function Home() {
     } catch (error) { setMessage(error instanceof Error ? error.message : "登錄失敗，請稍後再試。"); }
     finally { setSubmitting(false); }
   };
+
+  const completeRound = async () => {
+    setCompleting(true); setMessage("");
+    try {
+      const response = await fetch("/api/completions", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "完讀紀錄失敗，請稍後再試。");
+      setCompletedRound(data.rounds);
+      const refreshed = await fetch("/api/checkins").then(result => result.json());
+      setStats(refreshed);
+    } catch (error) { setMessage(error instanceof Error ? error.message : "完讀紀錄失敗，請稍後再試。"); }
+    finally { setCompleting(false); }
+  };
+
+  const startNextRound = () => { setChapter(1); setCheckedIn(false); setCompletedRound(null); setMessage(""); document.querySelector("#checkin")?.scrollIntoView({ behavior: "smooth" }); };
 
   const downloadKeepsake = async (item: typeof milestones[number]) => {
     const filename = `CGM閱讀紀念圖卡-${item.at}-${name.trim() || "閱讀夥伴"}.png`;
@@ -199,6 +216,8 @@ export default function Home() {
           <div className="moods"><span>今天的閱讀心情（選填）</span><div>{[["平靜","🙂"],["驚訝","😮"],["感動","😢"],["思考","🤔"]].map(([label, icon]) => <button type="button" className={mood === label ? "selected" : ""} aria-pressed={mood === label} aria-label={label} key={label} onClick={() => setMood(mood === label ? null : label)}>{icon}</button>)}</div></div>
           <button className="submit" disabled={submitting} onClick={submitCheckin}>{submitting ? "登錄中…" : "今天讀了一點"}</button>
           {checkedIn && <p className="success">✓ {name || "閱讀夥伴"}，你已為全團點亮第 {chapter} 站！</p>}
+          {checkedIn && chapter === 10 && !completedRound && <button className="complete-round" disabled={completing} onClick={completeRound}>{completing ? "記錄中…" : "我已讀完整本，完成本輪"}</button>}
+          {completedRound && <div className="completion-success"><strong>完成第 {completedRound} 輪閱讀！</strong><span>這一輪已永久保存。</span><button onClick={startNextRound}>開始下一輪閱讀</button></div>}
           {message && <p className="error">{message}</p>}
         </div>
         <aside className="my-progress"><span>目前旅程</span><strong>{progress}%</strong><div className="bar"><i style={{width:`${progress}%`}} /></div><p>已抵達：{chapters[chapter-1]}</p></aside>
@@ -230,7 +249,7 @@ export default function Home() {
 
       <section id="together" className="together section">
         <div className="section-heading"><p className="eyebrow">READ TOGETHER</p><h2>我們一起走了多遠</h2></div>
-        <div className="stats"><article><strong>{stats.weeklyPartners}</strong><span>本週閱讀夥伴</span></article><article><strong>{stats.total}</strong><span>累積閱讀足跡</span></article><article><strong>第 {stats.groupChapter} 站</strong><span>全團目前位置</span></article></div>
+        <div className="stats"><article><strong>{stats.weeklyPartners}</strong><span>本週閱讀夥伴</span></article><article><strong>{stats.total}</strong><span>累積閱讀足跡</span></article><article><strong>{stats.completedReaders}</strong><span>完讀人數</span></article><article><strong>{stats.totalRounds}</strong><span>完讀總輪次</span></article></div>
         <div className="unlock"><span>下一個共同解鎖</span><strong>{stats.total >= 100 ? "「和平之燈」已點亮" : `再累積 ${100 - stats.total} 次閱讀，點亮「和平之燈」`}</strong><div className="bar"><i style={{width:`${Math.min(100, stats.total)}%`}} /></div></div>
       </section>
 
