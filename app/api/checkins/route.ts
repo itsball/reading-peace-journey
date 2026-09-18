@@ -35,10 +35,17 @@ export async function POST(request: Request) {
     return Response.json({ error: "請輸入姓名並選擇正確章節。" }, { status: 400 });
   }
 
+  const rosterMember = await env.DB.prepare(`
+    SELECT participant_name FROM roster_members WHERE participant_key = ? LIMIT 1
+  `).bind(name.toLocaleLowerCase("zh-TW")).first<{ participant_name: string }>();
+  if (!rosterMember) {
+    return Response.json({ error: "找不到這位團員，請重新選擇區團、教會／聲部與姓名。" }, { status: 400 });
+  }
+
   await env.DB.prepare(`
     INSERT INTO reading_checkins (participant_name, participant_key, chapter, mood, created_at)
     VALUES (?, ?, ?, ?, ?)
-  `).bind(name, name.toLocaleLowerCase("zh-TW"), chapter, reflection, Date.now()).run();
+  `).bind(rosterMember.participant_name, name.toLocaleLowerCase("zh-TW"), chapter, reflection, Date.now()).run();
 
   return Response.json({ ok: true });
 }

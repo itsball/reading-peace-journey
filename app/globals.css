@@ -36,6 +36,11 @@ nav a { font-size:13px; font-weight:700; }
 .check-card input,.check-card select,.check-card textarea { border:1px solid rgba(35,70,59,.36); padding:15px; color:var(--ink); background:rgba(255,255,255,.55); font-size:16px; }
 .check-card textarea { resize:vertical; min-height:112px; line-height:1.7; }
 .field-hint { justify-self:end; color:#706d5b; font-weight:500; }
+.identity-fields { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.identity-fields label { min-width:0; }
+.check-card select:disabled { opacity:.55; cursor:not-allowed; }
+.identity-confirm { grid-template-columns:auto 1fr !important; align-items:start; padding:15px; border:1px solid rgba(78,91,59,.35); background:#eef2df; font-size:14px !important; line-height:1.55; cursor:pointer; }
+.identity-confirm input { width:20px; height:20px; margin:1px 0 0; padding:0; accent-color:var(--leaf); }
 .submit { width:100%; font-size:16px; }
 .submit:disabled { opacity:.65; cursor:wait; }
 .complete-round { width:100%; border:1px solid var(--deep); background:var(--leaf); color:white; padding:16px 20px; font:900 16px "Noto Sans TC",sans-serif; cursor:pointer; }
@@ -179,4 +184,5 @@ footer span { font-weight:400; color:#c3d8cd; }
   .admin-actions { flex-wrap:wrap; }
   .admin-filters input { min-width:0; width:100%; }
   .admin-kpis { grid-template-columns:1fr 1fr; }
+  .identity-fields { grid-template-columns:1fr; }
 }
