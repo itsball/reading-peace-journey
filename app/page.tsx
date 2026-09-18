@@ -39,7 +39,7 @@ export default function Home() {
   const [stats, setStats] = useState({ weeklyPartners: 0, total: 0, groupChapter: 1, totalRounds: 0, completedReaders: 0, chapterCounts: Array.from({ length: 10 }, () => 0) });
   const [detailTitle, setDetailTitle] = useState("");
   const [detailPeople, setDetailPeople] = useState<DetailPerson[]>([]);
-  const [detailKind, setDetailKind] = useState<"readers" | "checkins" | "rounds">("readers");
+  const [detailVisibleCount, setDetailVisibleCount] = useState(15);
   const [detailLoading, setDetailLoading] = useState(false);
   const regions = useMemo(() => [...new Set(roster.map(member => member.region))], [roster]);
   const voices = useMemo(() => [...new Set(roster.filter(member => member.region === selectedRegion).map(member => member.voice))], [roster, selectedRegion]);
@@ -58,8 +58,8 @@ export default function Home() {
     finally { setProgressLoading(false); }
   };
 
-  const openGroupDetail = async (type: "weekly" | "footprints" | "completed" | "rounds", title: string, kind: "readers" | "checkins" | "rounds") => {
-    setDetailTitle(title); setDetailKind(kind); setDetailPeople([]); setDetailLoading(true);
+  const openGroupDetail = async (type: "weekly" | "footprints" | "completed" | "rounds", title: string) => {
+    setDetailTitle(title); setDetailVisibleCount(15); setDetailPeople([]); setDetailLoading(true);
     try {
       const data = await fetch(`/api/group-details?type=${type}`).then(response => response.json());
       setDetailPeople(Array.isArray(data.people) ? data.people : []);
@@ -67,7 +67,7 @@ export default function Home() {
   };
 
   const openChapterReaders = async (chapterNumber: number) => {
-    setDetailTitle(`第 ${chapterNumber} 章｜${chapters[chapterNumber - 1]}`); setDetailKind("checkins"); setDetailPeople([]); setDetailLoading(true);
+    setDetailTitle(`第 ${chapterNumber} 章｜${chapters[chapterNumber - 1]}`); setDetailVisibleCount(15); setDetailPeople([]); setDetailLoading(true);
     try {
       const data = await fetch(`/api/chapter-readers?chapter=${chapterNumber}`).then(response => response.json());
       setDetailPeople(Array.isArray(data.readers) ? data.readers : []);
@@ -280,10 +280,10 @@ export default function Home() {
       <section id="together" className="together section">
         <div className="section-heading"><p className="eyebrow">READ TOGETHER</p><h2>我們一起走了多遠</h2><p>點選數字，可以查看一起前進的夥伴。</p></div>
         <div className="stats">
-          <button onClick={() => void openGroupDetail("weekly", "本週閱讀夥伴", "checkins")}><strong>{stats.weeklyPartners}</strong><span>本週閱讀夥伴</span><small>查看名單 →</small></button>
-          <button onClick={() => void openGroupDetail("footprints", "累積閱讀足跡", "checkins")}><strong>{stats.total}</strong><span>累積閱讀足跡</span><small>查看每人次數 →</small></button>
-          <button onClick={() => void openGroupDetail("completed", "完讀夥伴", "readers")}><strong>{stats.completedReaders}</strong><span>完讀人數</span><small>查看名單 →</small></button>
-          <button onClick={() => void openGroupDetail("rounds", "完讀總輪次", "rounds")}><strong>{stats.totalRounds}</strong><span>完讀總輪次</span><small>查看每人輪次 →</small></button>
+          <button onClick={() => void openGroupDetail("weekly", "本週閱讀夥伴")}><strong>{stats.weeklyPartners}</strong><span>本週閱讀夥伴</span><small>查看名單 →</small></button>
+          <button onClick={() => void openGroupDetail("footprints", "累積閱讀足跡")}><strong>{stats.total}</strong><span>累積閱讀足跡</span><small>查看名單 →</small></button>
+          <button onClick={() => void openGroupDetail("completed", "完讀夥伴")}><strong>{stats.completedReaders}</strong><span>完讀人數</span><small>查看名單 →</small></button>
+          <button onClick={() => void openGroupDetail("rounds", "完讀總輪次")}><strong>{stats.totalRounds}</strong><span>完讀總輪次</span><small>查看名單 →</small></button>
         </div>
       </section>
 
@@ -323,7 +323,7 @@ export default function Home() {
 
       <section className="book section"><div><p className="eyebrow">OUR BOOK</p><h2>《戰爭是殘忍的。<br/>愛與和平》</h2><p>鄭明析 著 · 特別精華版 · 448頁</p></div><blockquote>「比起殺人無數的英雄，救人無數的人才是更了不起的英雄。」</blockquote></section>
       <footer>CGM合唱團 · 2026十月榮耀神 <span>一起翻頁，一起走向音樂會。</span></footer>
-      {detailTitle && <div className="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="detail-title" onClick={() => setDetailTitle("")}><section className="detail-sheet" onClick={event => event.stopPropagation()}><button className="detail-close" aria-label="關閉名單" onClick={() => setDetailTitle("")}>×</button><p className="eyebrow">READING PARTNERS</p><h2 id="detail-title">{detailTitle}</h2>{detailLoading ? <p className="detail-empty">名單讀取中…</p> : detailPeople.length ? <div className="detail-list">{detailPeople.map(person => <article key={`${person.region}-${person.voice}-${person.participant_name}`}><div><strong>{person.participant_name}</strong><span>{person.region ? `${person.region}區 · ${person.voice}` : person.voice}</span></div>{detailKind !== "readers" && <b>{person.count} {detailKind === "rounds" ? "輪" : "次"}</b>}</article>)}</div> : <p className="detail-empty">目前還沒有名單。</p>}</section></div>}
+      {detailTitle && <div className="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="detail-title" onClick={() => setDetailTitle("")}><section className="detail-sheet" onClick={event => event.stopPropagation()}><button className="detail-close" aria-label="關閉名單" onClick={() => setDetailTitle("")}>×</button><p className="eyebrow">READING PARTNERS</p><h2 id="detail-title">{detailTitle}</h2>{detailLoading ? <p className="detail-empty">名單讀取中…</p> : detailPeople.length ? <><p className="detail-total">共 {detailPeople.length} 人</p><div className="detail-list">{detailPeople.slice(0, detailVisibleCount).map(person => <article key={`${person.region}-${person.voice}-${person.participant_name}`}><strong>{person.participant_name}</strong></article>)}</div>{detailVisibleCount < detailPeople.length && <button className="detail-more" type="button" onClick={() => setDetailVisibleCount(count => count + 15)}>顯示更多</button>}</> : <p className="detail-empty">目前還沒有名單。</p>}</section></div>}
     </main>
   );
 }
