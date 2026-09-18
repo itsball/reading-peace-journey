@@ -20,6 +20,7 @@ type PersonalProgress = { progress: number; readChapters: number[]; totalCheckin
 type DetailPerson = { participant_name: string; region: string; voice: string; count: number };
 const rewardByChapter: Record<number, string> = { 3: "25% 箴言卡", 5: "50% 箴言卡", 8: "75% 箴言卡", 10: "100% 箴言卡" };
 const boardPosition = (index: number) => index < 5 ? { gridColumn: index + 1, gridRow: 1 } : { gridColumn: 10 - index, gridRow: 2 };
+const makeDemoPeople = (count: number): DetailPerson[] => Array.from({ length: count }, (_, index) => ({ participant_name: `測試團員 ${String(index + 1).padStart(2, "0")}`, region: "", voice: "", count: 1 }));
 
 export default function Home() {
   const [name, setName] = useState("");
@@ -41,6 +42,7 @@ export default function Home() {
   const [detailPeople, setDetailPeople] = useState<DetailPerson[]>([]);
   const [detailVisibleCount, setDetailVisibleCount] = useState(15);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [demoMode, setDemoMode] = useState(false);
   const regions = useMemo(() => [...new Set(roster.map(member => member.region))], [roster]);
   const voices = useMemo(() => [...new Set(roster.filter(member => member.region === selectedRegion).map(member => member.voice))], [roster, selectedRegion]);
   const names = useMemo(() => roster.filter(member => member.region === selectedRegion && member.voice === selectedVoice), [roster, selectedRegion, selectedVoice]);
@@ -60,6 +62,10 @@ export default function Home() {
 
   const openGroupDetail = async (type: "weekly" | "footprints" | "completed" | "rounds", title: string) => {
     setDetailTitle(title); setDetailVisibleCount(15); setDetailPeople([]); setDetailLoading(true);
+    if (demoMode) {
+      const demoCounts = { weekly: 32, footprints: 38, completed: 20, rounds: 20 };
+      setDetailPeople(makeDemoPeople(demoCounts[type])); setDetailLoading(false); return;
+    }
     try {
       const data = await fetch(`/api/group-details?type=${type}`).then(response => response.json());
       setDetailPeople(Array.isArray(data.people) ? data.people : []);
@@ -68,6 +74,10 @@ export default function Home() {
 
   const openChapterReaders = async (chapterNumber: number) => {
     setDetailTitle(`第 ${chapterNumber} 章｜${chapters[chapterNumber - 1]}`); setDetailVisibleCount(15); setDetailPeople([]); setDetailLoading(true);
+    if (demoMode) {
+      const demoChapterCounts = [38, 36, 34, 32, 30, 28, 26, 24, 22, 20];
+      setDetailPeople(makeDemoPeople(demoChapterCounts[chapterNumber - 1])); setDetailLoading(false); return;
+    }
     try {
       const data = await fetch(`/api/chapter-readers?chapter=${chapterNumber}`).then(response => response.json());
       setDetailPeople(Array.isArray(data.readers) ? data.readers : []);
@@ -75,12 +85,15 @@ export default function Home() {
   };
 
   useEffect(() => {
+    const isDemo = new URLSearchParams(window.location.search).get("demo") === "1";
+    setDemoMode(isDemo);
     void document.fonts.ready;
     milestones.forEach(item => {
       const image = new Image();
       image.src = `/keepsake-${item.at}-illustration.png`;
     });
-    fetch("/api/checkins").then(response => response.json()).then(setStats).catch(() => undefined);
+    if (isDemo) setStats({ weeklyPartners: 32, total: 231, groupChapter: 10, totalRounds: 20, completedReaders: 20, chapterCounts: [38, 36, 34, 32, 30, 28, 26, 24, 22, 20] });
+    else fetch("/api/checkins").then(response => response.json()).then(setStats).catch(() => undefined);
     fetch("/api/roster").then(response => response.json()).then(data => setRoster(Array.isArray(data.members) ? data.members : [])).catch(() => setMessage("名冊載入失敗，請重新整理頁面。"));
   }, []);
 
@@ -246,6 +259,7 @@ export default function Home() {
 
   return (
     <main>
+      {demoMode && <div className="front-demo-notice"><strong>前台展示模式</strong><span>目前章節人數與名單皆為測試資料，不會寫入正式紀錄。</span><a href="/">返回正式首頁</a></div>}
       <section className="hero">
         <nav><span className="brand">CGM合唱團 · 2026十月榮耀神</span><a href="#checkin">今日登錄</a><a href="#journey">閱讀地圖</a><a href="#souvenirs">閱讀徽章</a><a href="#together">全團進度</a></nav>
         <div className="hero-copy">
