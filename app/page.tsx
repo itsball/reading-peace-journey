@@ -15,14 +15,17 @@ const milestones = [
   { at: 100, title: "和平之章", note: "完成共同閱讀旅程", mark: "肆", source: "2019年6月2日主日：信仰的武裝　箴言", quote: "36. 　神甚至讓老師參加越戰，藉此教導老師＜信仰的爭戰＞來培養「大膽的心」。雖然　神說老師必須成為「　神的身軀」，去戰場阻止交戰，但實際上是為了讓老師能如此在「信仰的戰爭」中好好統率，才讓老師上戰場的。\n\n37. 人要有＜氣魄＞。不論是否曾經從軍，都要憑著「從父母身上得到的氣魄」以及「度過生活時所造就的氣魄」來生活。\n\n38. 　神在聖經中提到：「眾新婦啊，你們要如＜日頭＞般皎潔清晰！要擁有如＜月亮＞般的美麗！要擁有如＜展開旌旗的軍隊＞般的精神和行為！」如此勸勉我們在屬靈上擁有各種特質，成為「具備美的人」。" },
 ];
 
-type RosterMember = { participant_name: string; region: string; church: string; voice: string };
+type RosterMember = { participant_name: string; region: string; voice: string };
+type PersonalProgress = { progress: number; readChapters: number[]; totalCheckins: number; completionRounds: number };
 
 export default function Home() {
   const [name, setName] = useState("");
   const [roster, setRoster] = useState<RosterMember[]>([]);
   const [selectedRegion, setSelectedRegion] = useState("");
-  const [selectedGroup, setSelectedGroup] = useState("");
+  const [selectedVoice, setSelectedVoice] = useState("");
   const [identityConfirmed, setIdentityConfirmed] = useState(false);
+  const [personalProgress, setPersonalProgress] = useState<PersonalProgress | null>(null);
+  const [progressLoading, setProgressLoading] = useState(false);
   const [chapter, setChapter] = useState(1);
   const [reflection, setReflection] = useState("");
   const [checkedIn, setCheckedIn] = useState(false);
@@ -33,9 +36,20 @@ export default function Home() {
   const [stats, setStats] = useState({ weeklyPartners: 0, total: 0, groupChapter: 1, totalRounds: 0, completedReaders: 0 });
   const progress = useMemo(() => Math.round((chapter / chapters.length) * 100), [chapter]);
   const regions = useMemo(() => [...new Set(roster.map(member => member.region))], [roster]);
-  const groups = useMemo(() => [...new Set(roster.filter(member => member.region === selectedRegion).map(member => `${member.church}｜${member.voice}`))], [roster, selectedRegion]);
-  const names = useMemo(() => roster.filter(member => member.region === selectedRegion && `${member.church}｜${member.voice}` === selectedGroup), [roster, selectedRegion, selectedGroup]);
-  const selectedMember = useMemo(() => roster.find(member => member.participant_name === name && member.region === selectedRegion && `${member.church}｜${member.voice}` === selectedGroup), [roster, name, selectedRegion, selectedGroup]);
+  const voices = useMemo(() => [...new Set(roster.filter(member => member.region === selectedRegion).map(member => member.voice))], [roster, selectedRegion]);
+  const names = useMemo(() => roster.filter(member => member.region === selectedRegion && member.voice === selectedVoice), [roster, selectedRegion, selectedVoice]);
+  const selectedMember = useMemo(() => roster.find(member => member.participant_name === name && member.region === selectedRegion && member.voice === selectedVoice), [roster, name, selectedRegion, selectedVoice]);
+
+  const loadPersonalProgress = async (participantName: string) => {
+    if (!participantName) { setPersonalProgress(null); return; }
+    setProgressLoading(true);
+    try {
+      const response = await fetch(`/api/progress?name=${encodeURIComponent(participantName)}`);
+      const data = await response.json();
+      setPersonalProgress(response.ok ? data : null);
+    } catch { setPersonalProgress(null); }
+    finally { setProgressLoading(false); }
+  };
 
   useEffect(() => {
     void document.fonts.ready;
@@ -55,6 +69,7 @@ export default function Home() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "登錄失敗，請稍後再試。");
       setCheckedIn(true);
+      await loadPersonalProgress(name);
       const refreshed = await fetch("/api/checkins").then(result => result.json());
       setStats(refreshed);
     } catch (error) { setMessage(error instanceof Error ? error.message : "登錄失敗，請稍後再試。"); }
@@ -223,11 +238,12 @@ export default function Home() {
         <div className="section-heading"><p className="eyebrow">MY READING CARD</p><h2>今天，也讀了一點</h2><p>十秒完成登錄，每一次閱讀都算數。</p></div>
         <div className="check-card">
           <div className="identity-fields">
-            <label>區團<select value={selectedRegion} onChange={event => { setSelectedRegion(event.target.value); setSelectedGroup(""); setName(""); setIdentityConfirmed(false); }}><option value="">請選擇區團</option>{regions.map(region => <option key={region} value={region}>{region}區</option>)}</select></label>
-            <label>教會／聲部<select value={selectedGroup} disabled={!selectedRegion} onChange={event => { setSelectedGroup(event.target.value); setName(""); setIdentityConfirmed(false); }}><option value="">請選擇教會與聲部</option>{groups.map(group => <option key={group} value={group}>{group}</option>)}</select></label>
+            <label>區團<select value={selectedRegion} onChange={event => { setSelectedRegion(event.target.value); setSelectedVoice(""); setName(""); setIdentityConfirmed(false); setPersonalProgress(null); }}><option value="">請選擇區團</option>{regions.map(region => <option key={region} value={region}>{region}區</option>)}</select></label>
+            <label>聲部<select value={selectedVoice} disabled={!selectedRegion} onChange={event => { setSelectedVoice(event.target.value); setName(""); setIdentityConfirmed(false); setPersonalProgress(null); }}><option value="">請選擇聲部</option>{voices.map(voice => <option key={voice} value={voice}>{voice}</option>)}</select></label>
           </div>
-          <label>姓名<select value={name} disabled={!selectedGroup} onChange={event => { setName(event.target.value); setIdentityConfirmed(false); }}><option value="">請選擇姓名</option>{names.map(member => <option key={member.participant_name} value={member.participant_name}>{member.participant_name}</option>)}</select></label>
-          {selectedMember && <label className="identity-confirm"><input type="checkbox" checked={identityConfirmed} onChange={event => setIdentityConfirmed(event.target.checked)} /><span>我是 <strong>{selectedMember.region}區／{selectedMember.church}／{selectedMember.voice}／{selectedMember.participant_name}</strong>，以上資料正確。</span></label>}
+          <label>姓名<select value={name} disabled={!selectedVoice} onChange={event => { const nextName = event.target.value; setName(nextName); setIdentityConfirmed(false); void loadPersonalProgress(nextName); }}><option value="">請選擇姓名</option>{names.map(member => <option key={member.participant_name} value={member.participant_name}>{member.participant_name}</option>)}</select></label>
+          {selectedMember && <label className="identity-confirm"><input type="checkbox" checked={identityConfirmed} onChange={event => setIdentityConfirmed(event.target.checked)} /><span>我是 <strong>{selectedMember.region}區／{selectedMember.voice}／{selectedMember.participant_name}</strong>，以上資料正確。</span></label>}
+          {name && <section className="saved-progress" aria-live="polite"><div><span>已登記進度</span><strong>{progressLoading ? "讀取中…" : `${personalProgress?.progress ?? 0}%`}</strong></div>{!progressLoading && personalProgress && <><p>已讀章節：{personalProgress.readChapters.length ? personalProgress.readChapters.map(item => `第 ${item} 章`).join("、") : "尚無紀錄"}</p><p>累積登錄 {personalProgress.totalCheckins} 次・完讀 {personalProgress.completionRounds} 輪</p></>}</section>}
           <label>目前讀到<select value={chapter} onChange={e => setChapter(Number(e.target.value))}>{chapters.map((c,i)=><option key={c} value={i+1}>第 {i+1} 章｜{c}</option>)}</select></label>
           <label>閱讀心得（選填）<textarea value={reflection} onChange={event => setReflection(event.target.value.slice(0, 300))} rows={4} maxLength={300} placeholder="簡單寫下今天讀到的內容、感受或想記住的一句話…" /><small className="field-hint">最多 300 字｜{reflection.length}/300</small></label>
           <button className="submit" disabled={submitting || !identityConfirmed} onClick={submitCheckin}>{submitting ? "登錄中…" : "今天讀了一點"}</button>

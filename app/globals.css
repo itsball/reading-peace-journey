@@ -41,6 +41,11 @@ nav a { font-size:13px; font-weight:700; }
 .check-card select:disabled { opacity:.55; cursor:not-allowed; }
 .identity-confirm { grid-template-columns:auto 1fr !important; align-items:start; padding:15px; border:1px solid rgba(78,91,59,.35); background:#eef2df; font-size:14px !important; line-height:1.55; cursor:pointer; }
 .identity-confirm input { width:20px; height:20px; margin:1px 0 0; padding:0; accent-color:var(--leaf); }
+.saved-progress { padding:18px 20px; border:1px solid rgba(78,91,59,.38); background:rgba(216,205,181,.42); }
+.saved-progress>div { display:flex; justify-content:space-between; align-items:center; gap:18px; font-family:"Noto Sans TC",sans-serif; }
+.saved-progress span { font-size:14px; font-weight:800; }
+.saved-progress strong { color:var(--leaf); font-size:30px; }
+.saved-progress p { margin:8px 0 0; color:#5f6254; font:600 14px/1.6 "Noto Sans TC",sans-serif; }
 .submit { width:100%; font-size:16px; }
 .submit:disabled { opacity:.65; cursor:wait; }
 .complete-round { width:100%; border:1px solid var(--deep); background:var(--leaf); color:white; padding:16px 20px; font:900 16px "Noto Sans TC",sans-serif; cursor:pointer; }
