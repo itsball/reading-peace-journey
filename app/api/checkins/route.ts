@@ -1,7 +1,5 @@
 import { env } from "cloudflare:workers";
 
-const allowedMoods = new Set(["平靜", "驚訝", "感動", "思考"]);
-
 export async function GET() {
   const now = Date.now();
   const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
@@ -27,19 +25,20 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const body = await request.json().catch(() => null) as { name?: unknown; chapter?: unknown; mood?: unknown } | null;
+  const body = await request.json().catch(() => null) as { name?: unknown; chapter?: unknown; reflection?: unknown; mood?: unknown } | null;
   const name = typeof body?.name === "string" ? body.name.trim().replace(/\s+/g, " ") : "";
   const chapter = Number(body?.chapter);
-  const mood = typeof body?.mood === "string" && allowedMoods.has(body.mood) ? body.mood : null;
+  const reflectionSource = typeof body?.reflection === "string" ? body.reflection : typeof body?.mood === "string" ? body.mood : "";
+  const reflection = reflectionSource.trim().replace(/\r\n/g, "\n") || null;
 
-  if (!name || name.length > 40 || !Number.isInteger(chapter) || chapter < 1 || chapter > 10) {
+  if (!name || name.length > 40 || !Number.isInteger(chapter) || chapter < 1 || chapter > 10 || (reflection?.length ?? 0) > 300) {
     return Response.json({ error: "請輸入姓名並選擇正確章節。" }, { status: 400 });
   }
 
   await env.DB.prepare(`
     INSERT INTO reading_checkins (participant_name, participant_key, chapter, mood, created_at)
     VALUES (?, ?, ?, ?, ?)
-  `).bind(name, name.toLocaleLowerCase("zh-TW"), chapter, mood, Date.now()).run();
+  `).bind(name, name.toLocaleLowerCase("zh-TW"), chapter, reflection, Date.now()).run();
 
   return Response.json({ ok: true });
 }

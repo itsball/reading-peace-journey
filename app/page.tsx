@@ -18,7 +18,7 @@ const milestones = [
 export default function Home() {
   const [name, setName] = useState("");
   const [chapter, setChapter] = useState(1);
-  const [mood, setMood] = useState<string | null>(null);
+  const [reflection, setReflection] = useState("");
   const [checkedIn, setCheckedIn] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [completing, setCompleting] = useState(false);
@@ -40,7 +40,7 @@ export default function Home() {
     if (!name.trim()) { setMessage("請先輸入姓名。"); return; }
     setSubmitting(true); setMessage(""); setCheckedIn(false); setCompletedRound(null);
     try {
-      const response = await fetch("/api/checkins", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name, chapter, mood }) });
+      const response = await fetch("/api/checkins", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name, chapter, reflection }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "登錄失敗，請稍後再試。");
       setCheckedIn(true);
@@ -213,7 +213,7 @@ export default function Home() {
         <div className="check-card">
           <label>你的姓名<input value={name} onChange={e => setName(e.target.value)} placeholder="輸入姓名" /></label>
           <label>目前讀到<select value={chapter} onChange={e => setChapter(Number(e.target.value))}>{chapters.map((c,i)=><option key={c} value={i+1}>第 {i+1} 章｜{c}</option>)}</select></label>
-          <div className="moods"><span>今天的閱讀心情（選填）</span><div>{[["平靜","🙂"],["驚訝","😮"],["感動","😢"],["思考","🤔"]].map(([label, icon]) => <button type="button" className={mood === label ? "selected" : ""} aria-pressed={mood === label} aria-label={label} key={label} onClick={() => setMood(mood === label ? null : label)}>{icon}</button>)}</div></div>
+          <label>閱讀心得（選填）<textarea value={reflection} onChange={event => setReflection(event.target.value.slice(0, 300))} rows={4} maxLength={300} placeholder="簡單寫下今天讀到的內容、感受或想記住的一句話…" /><small className="field-hint">最多 300 字｜{reflection.length}/300</small></label>
           <button className="submit" disabled={submitting} onClick={submitCheckin}>{submitting ? "登錄中…" : "今天讀了一點"}</button>
           {checkedIn && <p className="success">✓ {name || "閱讀夥伴"}，你已為全團點亮第 {chapter} 站！</p>}
           {checkedIn && chapter === 10 && !completedRound && <button className="complete-round" disabled={completing} onClick={completeRound}>{completing ? "記錄中…" : "我已讀完整本，完成本輪"}</button>}
