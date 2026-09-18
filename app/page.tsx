@@ -17,6 +17,9 @@ const milestones = [
 
 type RosterMember = { participant_name: string; region: string; voice: string };
 type PersonalProgress = { progress: number; readChapters: number[]; totalCheckins: number; completionRounds: number };
+type DetailPerson = { participant_name: string; region: string; voice: string; count: number };
+const rewardByChapter: Record<number, string> = { 3: "25% 箴言卡", 5: "50% 箴言卡", 8: "75% 箴言卡", 10: "100% 箴言卡" };
+const boardPosition = (index: number) => index < 5 ? { gridColumn: index + 1, gridRow: 1 } : { gridColumn: 10 - index, gridRow: 2 };
 
 export default function Home() {
   const [name, setName] = useState("");
@@ -33,12 +36,16 @@ export default function Home() {
   const [completing, setCompleting] = useState(false);
   const [completedRound, setCompletedRound] = useState<number | null>(null);
   const [message, setMessage] = useState("");
-  const [stats, setStats] = useState({ weeklyPartners: 0, total: 0, groupChapter: 1, totalRounds: 0, completedReaders: 0 });
-  const progress = useMemo(() => Math.round((chapter / chapters.length) * 100), [chapter]);
+  const [stats, setStats] = useState({ weeklyPartners: 0, total: 0, groupChapter: 1, totalRounds: 0, completedReaders: 0, chapterCounts: Array.from({ length: 10 }, () => 0) });
+  const [detailTitle, setDetailTitle] = useState("");
+  const [detailPeople, setDetailPeople] = useState<DetailPerson[]>([]);
+  const [detailKind, setDetailKind] = useState<"readers" | "checkins" | "rounds">("readers");
+  const [detailLoading, setDetailLoading] = useState(false);
   const regions = useMemo(() => [...new Set(roster.map(member => member.region))], [roster]);
   const voices = useMemo(() => [...new Set(roster.filter(member => member.region === selectedRegion).map(member => member.voice))], [roster, selectedRegion]);
   const names = useMemo(() => roster.filter(member => member.region === selectedRegion && member.voice === selectedVoice), [roster, selectedRegion, selectedVoice]);
   const selectedMember = useMemo(() => roster.find(member => member.participant_name === name && member.region === selectedRegion && member.voice === selectedVoice), [roster, name, selectedRegion, selectedVoice]);
+  const unlockedProgress = personalProgress?.progress ?? 0;
 
   const loadPersonalProgress = async (participantName: string) => {
     if (!participantName) { setPersonalProgress(null); return; }
@@ -49,6 +56,22 @@ export default function Home() {
       setPersonalProgress(response.ok ? data : null);
     } catch { setPersonalProgress(null); }
     finally { setProgressLoading(false); }
+  };
+
+  const openGroupDetail = async (type: "weekly" | "footprints" | "completed" | "rounds", title: string, kind: "readers" | "checkins" | "rounds") => {
+    setDetailTitle(title); setDetailKind(kind); setDetailPeople([]); setDetailLoading(true);
+    try {
+      const data = await fetch(`/api/group-details?type=${type}`).then(response => response.json());
+      setDetailPeople(Array.isArray(data.people) ? data.people : []);
+    } finally { setDetailLoading(false); }
+  };
+
+  const openChapterReaders = async (chapterNumber: number) => {
+    setDetailTitle(`第 ${chapterNumber} 章｜${chapters[chapterNumber - 1]}`); setDetailKind("checkins"); setDetailPeople([]); setDetailLoading(true);
+    try {
+      const data = await fetch(`/api/chapter-readers?chapter=${chapterNumber}`).then(response => response.json());
+      setDetailPeople(Array.isArray(data.readers) ? data.readers : []);
+    } finally { setDetailLoading(false); }
   };
 
   useEffect(() => {
@@ -252,19 +275,38 @@ export default function Home() {
           {completedRound && <div className="completion-success"><strong>完成第 {completedRound} 輪閱讀！</strong><span>這一輪已永久保存。</span><button onClick={startNextRound}>開始下一輪閱讀</button></div>}
           {message && <p className="error">{message}</p>}
         </div>
-        <aside className="my-progress"><span>目前旅程</span><strong>{progress}%</strong><div className="bar"><i style={{width:`${progress}%`}} /></div><p>已抵達：{chapters[chapter-1]}</p></aside>
+      </section>
+
+      <section id="together" className="together section">
+        <div className="section-heading"><p className="eyebrow">READ TOGETHER</p><h2>我們一起走了多遠</h2><p>點選數字，可以查看一起前進的夥伴。</p></div>
+        <div className="stats">
+          <button onClick={() => void openGroupDetail("weekly", "本週閱讀夥伴", "checkins")}><strong>{stats.weeklyPartners}</strong><span>本週閱讀夥伴</span><small>查看名單 →</small></button>
+          <button onClick={() => void openGroupDetail("footprints", "累積閱讀足跡", "checkins")}><strong>{stats.total}</strong><span>累積閱讀足跡</span><small>查看每人次數 →</small></button>
+          <button onClick={() => void openGroupDetail("completed", "完讀夥伴", "readers")}><strong>{stats.completedReaders}</strong><span>完讀人數</span><small>查看名單 →</small></button>
+          <button onClick={() => void openGroupDetail("rounds", "完讀總輪次", "rounds")}><strong>{stats.totalRounds}</strong><span>完讀總輪次</span><small>查看每人輪次 →</small></button>
+        </div>
       </section>
 
       <section id="journey" className="journey section">
-        <div className="section-heading light"><p className="eyebrow">THE JOURNEY</p><h2>十站閱讀地圖</h2><p>每個人照自己的速度前進，隨時都能重新加入。</p></div>
-        <div className="route">{chapters.map((c,i)=><article className={i < chapter ? "reached" : ""} key={c}><b>{String(i+1).padStart(2,"0")}</b><span>第 {i+1} 站</span><h3>{c}</h3><small>{i < chapter ? "已抵達 ✓" : "等待探索"}</small></article>)}</div>
+        <div className="section-heading light"><p className="eyebrow">THE JOURNEY</p><h2>十站閱讀大富翁</h2><p>亮起的站點代表已有夥伴登錄；點一下就能查看實際讀過這一章的人。</p></div>
+        <div className="board-route">
+          <svg className="board-line" viewBox="0 0 1000 300" aria-hidden="true"><path d="M100 78 H900 V222 H100" /></svg>
+          {chapters.map((title, index) => {
+            const chapterNumber = index + 1;
+            const readers = stats.chapterCounts[index] ?? 0;
+            const isMine = personalProgress?.readChapters.includes(chapterNumber) ?? false;
+            return <button type="button" style={boardPosition(index)} disabled={readers === 0} className={`board-station ${readers ? "lit" : ""} ${isMine ? "mine" : ""}`} onClick={() => void openChapterReaders(chapterNumber)} key={title}>
+              <b>{String(chapterNumber).padStart(2,"0")}</b><span>{title}</span><small>{readers ? `${readers} 人已讀・查看名單` : "等待第一位夥伴"}</small>{isMine && <em>我的足跡 ✓</em>}{rewardByChapter[chapterNumber] && <i>{rewardByChapter[chapterNumber]}</i>}
+            </button>;
+          })}
+        </div>
       </section>
 
       <section id="souvenirs" className="souvenirs section">
         <div className="section-heading"><p className="eyebrow">READING KEEPSAKES</p><h2>把閱讀旅程，留下來</h2><p>首頁徽章記錄閱讀進度；每抵達一個里程碑，就能下載一張專屬箴言紀念圖卡。</p></div>
         <div className="badge-grid">
           {milestones.map(item => {
-            const unlocked = progress >= item.at;
+            const unlocked = unlockedProgress >= item.at;
             return <article className={unlocked ? "badge unlocked" : "badge locked"} key={item.at}>
               <div className="badge-seal"><b>{item.mark}</b><span>{item.at}%</span></div>
               <small>{unlocked ? "已解鎖" : `閱讀達 ${item.at}% 解鎖`}</small>
@@ -273,20 +315,15 @@ export default function Home() {
             </article>;
           })}
         </div>
-        <div className={`completion-card ${progress >= 100 ? "complete" : ""}`}>
+        <div className={`completion-card ${unlockedProgress >= 100 ? "complete" : ""}`}>
           <div><p className="eyebrow">PERSONAL READING CARD</p><h3>{name.trim() || "閱讀夥伴"}的完讀紀念卡</h3><p>完成《戰爭是殘忍的。愛與和平》閱讀旅程</p><div className="mini-stamps">{milestones.map(item => <i key={item.at}>{item.mark}</i>)}</div></div>
-          <button disabled={progress < 100} onClick={() => downloadKeepsake(milestones[3])}>{progress >= 100 ? "下載我的完讀圖卡 ↓" : `完成全書後解鎖（目前 ${progress}%）`}</button>
+          <button disabled={unlockedProgress < 100} onClick={() => downloadKeepsake(milestones[3])}>{unlockedProgress >= 100 ? "下載我的完讀圖卡 ↓" : `完成全書後解鎖（目前 ${unlockedProgress}%）`}</button>
         </div>
-      </section>
-
-      <section id="together" className="together section">
-        <div className="section-heading"><p className="eyebrow">READ TOGETHER</p><h2>我們一起走了多遠</h2></div>
-        <div className="stats"><article><strong>{stats.weeklyPartners}</strong><span>本週閱讀夥伴</span></article><article><strong>{stats.total}</strong><span>累積閱讀足跡</span></article><article><strong>{stats.completedReaders}</strong><span>完讀人數</span></article><article><strong>{stats.totalRounds}</strong><span>完讀總輪次</span></article></div>
-        <div className="unlock"><span>下一個共同解鎖</span><strong>{stats.total >= 100 ? "「和平之燈」已點亮" : `再累積 ${100 - stats.total} 次閱讀，點亮「和平之燈」`}</strong><div className="bar"><i style={{width:`${Math.min(100, stats.total)}%`}} /></div></div>
       </section>
 
       <section className="book section"><div><p className="eyebrow">OUR BOOK</p><h2>《戰爭是殘忍的。<br/>愛與和平》</h2><p>鄭明析 著 · 特別精華版 · 448頁</p></div><blockquote>「比起殺人無數的英雄，救人無數的人才是更了不起的英雄。」</blockquote></section>
       <footer>CGM合唱團 · 2026十月榮耀神 <span>一起翻頁，一起走向音樂會。</span></footer>
+      {detailTitle && <div className="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="detail-title" onClick={() => setDetailTitle("")}><section className="detail-sheet" onClick={event => event.stopPropagation()}><button className="detail-close" aria-label="關閉名單" onClick={() => setDetailTitle("")}>×</button><p className="eyebrow">READING PARTNERS</p><h2 id="detail-title">{detailTitle}</h2>{detailLoading ? <p className="detail-empty">名單讀取中…</p> : detailPeople.length ? <div className="detail-list">{detailPeople.map(person => <article key={`${person.region}-${person.voice}-${person.participant_name}`}><div><strong>{person.participant_name}</strong><span>{person.region ? `${person.region}區 · ${person.voice}` : person.voice}</span></div>{detailKind !== "readers" && <b>{person.count} {detailKind === "rounds" ? "輪" : "次"}</b>}</article>)}</div> : <p className="detail-empty">目前還沒有名單。</p>}</section></div>}
     </main>
   );
 }

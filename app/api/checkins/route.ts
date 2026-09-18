@@ -14,6 +14,15 @@ export async function GET() {
     SELECT COUNT(*) AS total_rounds, COUNT(DISTINCT participant_key) AS completed_readers
     FROM reading_completions
   `).first<{ total_rounds: number; completed_readers: number }>();
+  const chapterRows = await env.DB.prepare(`
+    SELECT chapter, COUNT(DISTINCT participant_key) AS readers
+    FROM reading_checkins
+    GROUP BY chapter
+  `).all<{ chapter: number; readers: number }>();
+  const chapterCounts = Array.from({ length: 10 }, () => 0);
+  for (const row of chapterRows.results ?? []) {
+    if (row.chapter >= 1 && row.chapter <= 10) chapterCounts[row.chapter - 1] = Number(row.readers);
+  }
 
   return Response.json({
     total: Number(stats?.total ?? 0),
@@ -21,6 +30,7 @@ export async function GET() {
     groupChapter: Math.max(1, Math.min(10, Number(stats?.group_chapter ?? 1))),
     totalRounds: Number(completions?.total_rounds ?? 0),
     completedReaders: Number(completions?.completed_readers ?? 0),
+    chapterCounts,
   });
 }
 
