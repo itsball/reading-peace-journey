@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 
 const chapters = [
   "從入伍到派越", "打稻穀，愛居民的作戰", "去愛吧", "烏鵲橋作戰",
@@ -22,6 +22,12 @@ type DetailPerson = { participant_name: string; region: string; voice: string; c
 const rewardByChapter: Record<number, string> = { 3: "25% 箴言卡", 5: "50% 箴言卡", 8: "75% 箴言卡", 10: "100% 箴言卡" };
 const boardPosition = (index: number) => index < 5 ? { gridColumn: index + 1, gridRow: 1 } : { gridColumn: 10 - index, gridRow: 2 };
 const makeDemoPeople = (count: number): DetailPerson[] => Array.from({ length: count }, (_, index) => ({ participant_name: `測試團員 ${String(index + 1).padStart(2, "0")}`, region: "", voice: "", count: 1 }));
+const celebrationCopy: Record<number, { chapters: number; books: number; label: string; note: string }> = {
+  25: { chapters: 280, books: 28, label: "共同啟程", note: "每一次翻頁，都讓我們更靠近故事的心。" },
+  50: { chapters: 560, books: 56, label: "走過一半", note: "因為彼此的投入，閱讀旅程正在發光。" },
+  75: { chapters: 840, books: 84, label: "榮耀前行", note: "我們帶著理解與感動，繼續向目標前進。" },
+  100: { chapters: 1120, books: 112, label: "共同完成", note: "以閱讀更瞭解體會老師，為預備音樂會來獻上榮耀。" },
+};
 
 const prepareImageDelivery = (filename: string) => {
   const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -67,6 +73,8 @@ export default function Home() {
   const [detailVisibleCount, setDetailVisibleCount] = useState(15);
   const [detailLoading, setDetailLoading] = useState(false);
   const [demoMode, setDemoMode] = useState(false);
+  const [celebrationMode, setCelebrationMode] = useState(false);
+  const [celebrationPreview, setCelebrationPreview] = useState<number | null>(null);
   const regions = useMemo(() => [...new Set(roster.map(member => member.region))], [roster]);
   const voices = useMemo(() => [...new Set(roster.filter(member => member.region === selectedRegion).map(member => member.voice))], [roster, selectedRegion]);
   const names = useMemo(() => roster.filter(member => member.region === selectedRegion && member.voice === selectedVoice), [roster, selectedRegion, selectedVoice]);
@@ -109,8 +117,12 @@ export default function Home() {
   };
 
   useEffect(() => {
-    const isDemo = new URLSearchParams(window.location.search).get("demo") === "1";
+    const params = new URLSearchParams(window.location.search);
+    const isDemo = params.get("demo") === "1";
+    const isCelebrationDemo = params.get("demo") === "celebration";
     setDemoMode(isDemo);
+    setCelebrationMode(isCelebrationDemo);
+    if (isCelebrationDemo) setCelebrationPreview(100);
     void document.fonts.ready;
     milestones.forEach(item => {
       const image = new Image();
@@ -353,6 +365,18 @@ export default function Home() {
 
   return (
     <main>
+      {celebrationMode && <aside className="celebration-test-panel"><strong>動畫測試</strong><span>選擇里程碑</span><div>{[25,50,75,100].map(level => <button type="button" key={level} onClick={() => setCelebrationPreview(level)}>{level}%</button>)}</div><a href="/">返回正式首頁</a></aside>}
+      {celebrationPreview && <div className={`celebration-overlay celebration-${celebrationPreview}`} role="dialog" aria-modal="true" aria-label={`${celebrationPreview}% 目標達成`}>
+        <div className="celebration-rays" />
+        <div className="celebration-particles" aria-hidden="true">{Array.from({ length: 28 }, (_, index) => <i key={index} style={{ "--particle": index } as CSSProperties} />)}</div>
+        <section className="celebration-card">
+          <p>CGM CHOIR · READING MILESTONE</p><div className="celebration-seal"><small>全團共同閱讀量</small><strong>{celebrationPreview}%</strong><span>{celebrationCopy[celebrationPreview].label}</span></div>
+          <h2>恭喜全團<br/>達成共同目標！</h2>
+          <div className="celebration-numbers"><b>{celebrationCopy[celebrationPreview].chapters.toLocaleString()}</b><span>累積閱讀章數</span><i>相當於共同讀完 {celebrationCopy[celebrationPreview].books} 本</i></div>
+          <blockquote>{celebrationCopy[celebrationPreview].note}</blockquote>
+          <button type="button" onClick={() => setCelebrationPreview(null)}>進入網站</button>
+        </section>
+      </div>}
       {demoMode && <div className="front-demo-notice"><strong>前台展示模式</strong><span>目前章節人數與名單皆為測試資料，不會寫入正式紀錄。</span><a href="/">返回正式首頁</a></div>}
       <section className="hero">
         <nav><span className="brand">CGM合唱團 · 2026十月榮耀神</span><a href="#checkin">今日登錄</a><a href="#journey">閱讀地圖</a><a href="#souvenirs">閱讀徽章</a><a href="#together">全團進度</a></nav>
