@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 export type MemberRecord = { participant_name: string; region: string; church: string; voice: string; nature: string; total_checkins: number; furthest_chapter: number; last_checkin: number | null; completion_rounds: number };
 const statusOf = (member: MemberRecord) => !member.last_checkin ? "尚未開始" : member.completion_rounds > 0 ? "已完成" : Date.now() - member.last_checkin <= 7 * 86400000 ? "穩定前進" : "需要鼓勵";
 
-export default function AdminDashboard({ members, canExport, role }: { members: MemberRecord[]; canExport: boolean; role: string }) {
+export default function AdminDashboard({ members, canExport, role, demoMode = false }: { members: MemberRecord[]; canExport: boolean; role: string; demoMode?: boolean }) {
   const [region, setRegion] = useState("全團");
   const [query, setQuery] = useState("");
   const [selectedList, setSelectedList] = useState<string | null>(null);
@@ -38,6 +38,7 @@ export default function AdminDashboard({ members, canExport, role }: { members: 
     const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `CGM閱讀紀錄-${region}.csv`; link.click(); URL.revokeObjectURL(link.href);
   };
   return <main className="admin"><section>
+    {demoMode && <div className="demo-notice"><strong>展示模式</strong><span>目前顯示的是測試名單，不會寫入正式紀錄。</span><a href="/admin">返回正式名單</a></div>}
     <div className="admin-head"><div><p className="eyebrow">READING DASHBOARD · {role}</p><h1>整團參與儀表板</h1><p>名冊共 {members.length} 人｜目前查看 {filtered.length} 人</p></div><div className="admin-actions"><a href="/">回活動首頁</a>{canExport && <button onClick={exportCsv}>匯出 CSV ↓</button>}</div></div>
     <div className="admin-filters"><div>{["全團","北區","中區","南區"].map(item => <button className={region === item ? "active" : ""} onClick={() => setRegion(item)} key={item}>{item}</button>)}</div><input value={query} onChange={event => setQuery(event.target.value)} placeholder="搜尋姓名、教會或聲部" /></div>
     <div className="admin-kpis"><article><strong>{filtered.length}</strong><span>名冊人數</span></article><article><strong>{active}</strong><span>本週有閱讀</span></article><article><strong>{totalCheckins}</strong><span>累積登錄</span></article><article><strong>{completed}</strong><span>完讀人數</span></article><article><strong>{completionRounds}</strong><span>完讀總輪次</span></article><article><strong>{care}</strong><span>需要關懷</span></article></div>
