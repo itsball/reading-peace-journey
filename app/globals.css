@@ -92,12 +92,19 @@ nav a { font-size:13px; font-weight:700; }
 .badge.locked .badge-seal { border-style:dashed; }
 .badge button:disabled,.completion-card button:disabled { cursor:not-allowed; background:transparent; color:#777262; border-color:rgba(43,43,37,.3); }
 .badge.unlocked .badge-seal { color:#6f4837; background:rgba(199,166,95,.25); transform:rotate(-2deg); }
-.completion-card { margin-top:28px; border:1px solid var(--deep); background:var(--paper); padding:42px; display:grid; grid-template-columns:1fr auto; gap:30px; align-items:center; box-shadow:inset 0 0 0 9px rgba(43,43,37,.045); }
+.completion-card { margin-top:28px; border:1px solid var(--deep); background:var(--paper); padding:42px; display:grid; grid-template-columns:.8fr 1.2fr; gap:40px; align-items:start; box-shadow:inset 0 0 0 9px rgba(43,43,37,.045); }
 .completion-card h3 { font-size:34px; margin:8px 0; }
 .completion-card p { margin:5px 0 20px; }
 .mini-stamps { display:flex; gap:10px; }
 .mini-stamps i { width:45px; height:45px; border:1px solid var(--deep); border-radius:50%; display:grid; place-items:center; font-style:normal; font-weight:800; opacity:.35; }
 .completion-card.complete .mini-stamps i { opacity:1; color:#754b39; background:rgba(199,166,95,.24); }
+.completion-downloads { display:grid; gap:12px; }
+.completion-downloads article { display:grid; grid-template-columns:42px 1fr auto; gap:14px; align-items:center; padding:18px; border:1px solid rgba(43,43,37,.22); background:rgba(255,255,255,.55); }
+.completion-downloads article>span { width:38px; height:38px; display:grid; place-items:center; border:1px solid var(--deep); border-radius:50%; color:var(--leaf); font:900 13px "Noto Sans TC",sans-serif; }
+.completion-downloads strong,.completion-downloads small { display:block; font-family:"Noto Sans TC",sans-serif; }
+.completion-downloads strong { font-size:17px; }
+.completion-downloads small { margin-top:4px; color:#666454; font-size:13px; line-height:1.5; }
+.completion-downloads button { margin:0; white-space:nowrap; }
 
 .together { background:#eee5d2; }
 .stats { display:grid; grid-template-columns:repeat(4,1fr); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
@@ -195,6 +202,8 @@ footer span { font-weight:400; color:#c3d8cd; }
   .checkin,.book { grid-template-columns:1fr; }
   .badge-grid { grid-template-columns:1fr 1fr; }
   .completion-card { grid-template-columns:1fr; }
+  .completion-downloads article { grid-template-columns:42px 1fr; }
+  .completion-downloads button { grid-column:1/-1; width:100%; }
   .stats { grid-template-columns:1fr; }
   .stats button { border-right:0; border-bottom:1px solid var(--line); }
   .admin-kpis { grid-template-columns:repeat(2,1fr); }

@@ -16,11 +16,35 @@ const milestones = [
 ];
 
 type RosterMember = { participant_name: string; region: string; voice: string };
-type PersonalProgress = { progress: number; readChapters: number[]; totalCheckins: number; completionRounds: number };
+type ReflectionEntry = { chapter: number; text: string; createdAt: number };
+type PersonalProgress = { progress: number; readChapters: number[]; totalCheckins: number; completionRounds: number; reflections: ReflectionEntry[] };
 type DetailPerson = { participant_name: string; region: string; voice: string; count: number };
 const rewardByChapter: Record<number, string> = { 3: "25% 箴言卡", 5: "50% 箴言卡", 8: "75% 箴言卡", 10: "100% 箴言卡" };
 const boardPosition = (index: number) => index < 5 ? { gridColumn: index + 1, gridRow: 1 } : { gridColumn: 10 - index, gridRow: 2 };
 const makeDemoPeople = (count: number): DetailPerson[] => Array.from({ length: count }, (_, index) => ({ participant_name: `測試團員 ${String(index + 1).padStart(2, "0")}`, region: "", voice: "", count: 1 }));
+
+const prepareImageDelivery = (filename: string) => {
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const shareNavigator = navigator as Navigator & { canShare?: (data: ShareData) => boolean; share?: (data: ShareData) => Promise<void> };
+  const shareProbe = new File([new Uint8Array(1)], filename, { type: "image/png" });
+  const canShareFile = Boolean(isMobile && shareNavigator.share && shareNavigator.canShare?.({ files: [shareProbe] }));
+  const fallbackWindow = isMobile && !canShareFile ? window.open("", "_blank") : null;
+  if (fallbackWindow) fallbackWindow.document.body.innerHTML = "<p style='font:16px sans-serif;padding:24px'>圖卡產生中，請稍候…</p>";
+  return { shareNavigator, canShareFile, fallbackWindow };
+};
+
+const deliverCanvas = async (canvas: HTMLCanvasElement, filename: string, title: string, delivery: ReturnType<typeof prepareImageDelivery>) => {
+  const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(result => result ? resolve(result) : reject(new Error("圖卡產生失敗")), "image/png"));
+  const file = new File([blob], filename, { type: "image/png" });
+  if (delivery.canShareFile && delivery.shareNavigator.share) {
+    try { await delivery.shareNavigator.share({ files: [file], title }); return; }
+    catch (error) { if (error instanceof DOMException && error.name === "AbortError") return; }
+  }
+  const objectUrl = URL.createObjectURL(blob);
+  if (delivery.fallbackWindow) { delivery.fallbackWindow.location.href = objectUrl; window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000); return; }
+  const link = document.createElement("a"); link.download = filename; link.href = objectUrl; document.body.appendChild(link); link.click(); link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 10_000);
+};
 
 export default function Home() {
   const [name, setName] = useState("");
@@ -257,6 +281,60 @@ export default function Home() {
     window.setTimeout(() => URL.revokeObjectURL(objectUrl), 10_000);
   };
 
+  const downloadCertificate = async () => {
+    const filename = `CGM完讀獎狀-${name.trim() || "閱讀夥伴"}.png`;
+    const delivery = prepareImageDelivery(filename);
+    await document.fonts.ready;
+    const canvas = document.createElement("canvas"); canvas.width = 1600; canvas.height = 1130;
+    const ctx = canvas.getContext("2d"); if (!ctx) return;
+    const sans = "'Source Han Sans TC','Noto Sans TC','Microsoft JhengHei',sans-serif";
+    ctx.fillStyle = "#f3e8ce"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = "#292d24"; ctx.lineWidth = 4; ctx.strokeRect(36, 36, 1528, 1058);
+    ctx.strokeStyle = "#9f7b3d"; ctx.lineWidth = 2; ctx.strokeRect(58, 58, 1484, 1014);
+    ctx.textAlign = "center"; ctx.fillStyle = "#4e5b3b"; ctx.font = `800 26px ${sans}`; ctx.fillText("CGM合唱團 · 2026十月榮耀神", 800, 150);
+    ctx.fillStyle = "#292d24"; ctx.font = `900 82px ${sans}`; ctx.fillText("完 讀 獎 狀", 800, 285);
+    ctx.fillStyle = "#9f7b3d"; ctx.fillRect(570, 320, 460, 5);
+    ctx.fillStyle = "#292d24"; ctx.font = `900 72px ${sans}`; ctx.fillText(name.trim() || "閱讀夥伴", 800, 470);
+    ctx.font = `600 34px ${sans}`; ctx.fillText("完成《戰爭是殘忍的。愛與和平》全書閱讀旅程", 800, 570);
+    ctx.font = `500 28px ${sans}`; ctx.fillStyle = "#5e6251"; ctx.fillText("以閱讀走近故事，以理解預備明年的獻上", 800, 635);
+    ctx.beginPath(); ctx.arc(800, 795, 105, 0, Math.PI * 2); ctx.fillStyle = "rgba(159,123,61,.14)"; ctx.fill(); ctx.strokeStyle = "#9f7b3d"; ctx.lineWidth = 4; ctx.stroke();
+    ctx.fillStyle = "#6f4837"; ctx.font = `900 50px ${sans}`; ctx.fillText("完讀", 800, 790); ctx.font = `800 26px ${sans}`; ctx.fillText("100%", 800, 835);
+    ctx.fillStyle = "#292d24"; ctx.font = `700 23px ${sans}`; ctx.fillText("OCTOBER 2026  ·  READING COMPLETION", 800, 1010);
+    await deliverCanvas(canvas, filename, "CGM完讀獎狀", delivery);
+  };
+
+  const downloadReflectionCard = async () => {
+    const reflections = personalProgress?.reflections ?? [];
+    if (!reflections.length) return;
+    const filename = `CGM閱讀心得彙總-${name.trim() || "閱讀夥伴"}.png`;
+    const delivery = prepareImageDelivery(filename);
+    await document.fonts.ready;
+    const measureCanvas = document.createElement("canvas"); const measure = measureCanvas.getContext("2d"); if (!measure) return;
+    const sans = "'Source Han Sans TC','Noto Sans TC','Microsoft JhengHei',sans-serif";
+    measure.font = `600 31px ${sans}`;
+    const wrap = (text: string, maxWidth: number) => { const lines: string[] = []; for (const paragraph of text.split("\n")) { if (!paragraph) { lines.push(""); continue; } let line = ""; for (const char of paragraph) { const next = line + char; if (measure.measureText(next).width > maxWidth && line) { lines.push(line); line = char; } else line = next; } if (line) lines.push(line); } return lines; };
+    const entries = reflections.map(item => ({ ...item, lines: wrap(item.text, 1000) }));
+    const contentHeight = entries.reduce((sum, item) => sum + 92 + Math.max(1, item.lines.length) * 48 + 34, 0);
+    const canvas = document.createElement("canvas"); canvas.width = 1200; canvas.height = Math.max(1800, 430 + contentHeight + 150);
+    const ctx = canvas.getContext("2d"); if (!ctx) return;
+    ctx.fillStyle = "#f3e8ce"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = "rgba(43,43,37,.55)"; ctx.lineWidth = 2; ctx.strokeRect(30, 30, canvas.width - 60, canvas.height - 60);
+    ctx.fillStyle = "#4e5b3b"; ctx.font = `800 25px ${sans}`; ctx.fillText("CGM合唱團 · 2026十月榮耀神", 72, 110);
+    ctx.fillStyle = "#292d24"; ctx.font = `900 64px ${sans}`; ctx.fillText("我的閱讀心得旅程", 72, 205);
+    ctx.font = `700 30px ${sans}`; ctx.fillText(`${name.trim() || "閱讀夥伴"} · 《戰爭是殘忍的。愛與和平》`, 72, 265);
+    ctx.fillStyle = "#9f7b3d"; ctx.fillRect(72, 302, 240, 7);
+    let y = 390;
+    for (const item of entries) {
+      ctx.fillStyle = "#4e5b3b"; ctx.font = `900 25px ${sans}`; ctx.fillText(`第 ${item.chapter} 章｜${chapters[item.chapter - 1]}`, 88, y);
+      y += 54; ctx.fillStyle = "rgba(78,91,59,.13)"; ctx.fillRect(72, y - 30, 6, Math.max(58, item.lines.length * 48 + 22));
+      ctx.fillStyle = "#292d24"; ctx.font = `600 31px ${sans}`;
+      for (const line of item.lines) { ctx.fillText(line, 100, y); y += 48; }
+      y += 58;
+    }
+    ctx.fillStyle = "#292d24"; ctx.font = `700 20px ${sans}`; ctx.fillText("OCTOBER 2026  ·  READING REFLECTIONS", 72, canvas.height - 72);
+    await deliverCanvas(canvas, filename, "閱讀心得彙總紀念卡", delivery);
+  };
+
   return (
     <main>
       {demoMode && <div className="front-demo-notice"><strong>前台展示模式</strong><span>目前章節人數與名單皆為測試資料，不會寫入正式紀錄。</span><a href="/">返回正式首頁</a></div>}
@@ -330,8 +408,11 @@ export default function Home() {
           })}
         </div>
         <div className={`completion-card ${unlockedProgress >= 100 ? "complete" : ""}`}>
-          <div><p className="eyebrow">PERSONAL READING CARD</p><h3>{name.trim() || "閱讀夥伴"}的完讀紀念卡</h3><p>完成《戰爭是殘忍的。愛與和平》閱讀旅程</p><div className="mini-stamps">{milestones.map(item => <i key={item.at}>{item.mark}</i>)}</div></div>
-          <button disabled={unlockedProgress < 100} onClick={() => downloadKeepsake(milestones[3])}>{unlockedProgress >= 100 ? "下載我的完讀圖卡 ↓" : `完成全書後解鎖（目前 ${unlockedProgress}%）`}</button>
+          <div className="completion-heading"><p className="eyebrow">COMPLETION KEEPSAKES</p><h3>{name.trim() || "閱讀夥伴"}的完讀紀念</h3><p>完成全書後解鎖兩種專屬紀念；心得卡只在曾填寫閱讀心得時提供。</p><div className="mini-stamps">{milestones.map(item => <i key={item.at}>{item.mark}</i>)}</div></div>
+          <div className="completion-downloads">
+            <article><span>01</span><div><strong>完讀獎狀</strong><small>記錄完成《戰爭是殘忍的。愛與和平》全書閱讀</small></div><button disabled={unlockedProgress < 100} onClick={downloadCertificate}>{unlockedProgress >= 100 ? "下載完讀獎狀 ↓" : `完成全書後解鎖（目前 ${unlockedProgress}%）`}</button></article>
+            <article><span>02</span><div><strong>心得彙總紀念卡</strong><small>{personalProgress?.reflections?.length ? `彙整 ${personalProgress.reflections.length} 則心得，並標示填寫章節` : "尚未填寫閱讀心得，因此不產生這張卡片"}</small></div><button disabled={unlockedProgress < 100 || !(personalProgress?.reflections?.length)} onClick={downloadReflectionCard}>{unlockedProgress < 100 ? "完成全書後解鎖" : personalProgress?.reflections?.length ? "下載心得彙總卡 ↓" : "沒有可彙整的心得"}</button></article>
+          </div>
         </div>
       </section>
 

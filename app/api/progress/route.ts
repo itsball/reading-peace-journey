@@ -18,6 +18,12 @@ export async function GET(request: Request) {
   const completion = await env.DB.prepare(`
     SELECT COUNT(*) AS rounds FROM reading_completions WHERE participant_key = ?
   `).bind(participantKey).first<{ rounds: number }>();
+  const reflectionRows = await env.DB.prepare(`
+    SELECT chapter, mood AS text, created_at
+    FROM reading_checkins
+    WHERE participant_key = ? AND mood IS NOT NULL AND TRIM(mood) <> ''
+    ORDER BY chapter, created_at
+  `).bind(participantKey).all<{ chapter: number; text: string; created_at: number }>();
 
   const readChapters = (chapterRows.results ?? []).map(row => Number(row.chapter)).filter(chapter => chapter >= 1 && chapter <= 10);
   const totalCheckins = (chapterRows.results ?? []).reduce((sum, row) => sum + Number(row.checkins), 0);
@@ -26,5 +32,6 @@ export async function GET(request: Request) {
     readChapters,
     totalCheckins,
     completionRounds: Number(completion?.rounds ?? 0),
+    reflections: (reflectionRows.results ?? []).map(row => ({ chapter: Number(row.chapter), text: row.text, createdAt: Number(row.created_at) })),
   });
 }
