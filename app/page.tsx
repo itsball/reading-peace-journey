@@ -456,7 +456,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="book section"><div><p className="eyebrow">OUR BOOK</p><h2>《戰爭是殘忍的。<br/>愛與和平》</h2><p>鄭明析 著 · 特別精華版 · 448頁</p></div><blockquote>「比起殺人無數的英雄，救人無數的人才是更了不起的英雄。」</blockquote></section>
+      <section className="book section"><div><p className="eyebrow">OUR BOOK</p><h2><span className="book-title-line">《戰爭是殘忍的。</span><span className="book-title-line">愛與和平》</span></h2><p>鄭明析 著 · 特別精華版 · 448頁</p></div><blockquote>「比起殺人無數的英雄，救人無數的人才是更了不起的英雄。」</blockquote></section>
       <footer>CGM合唱團 · 2026十月榮耀神 <span>一起翻頁，一起走向音樂會。</span></footer>
       {detailTitle && <div className="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="detail-title" onClick={() => setDetailTitle("")}><section className="detail-sheet" onClick={event => event.stopPropagation()}><button className="detail-close" aria-label="關閉名單" onClick={() => setDetailTitle("")}>×</button><p className="eyebrow">READING PARTNERS</p><h2 id="detail-title">{detailTitle}</h2>{detailLoading ? <p className="detail-empty">名單讀取中…</p> : detailPeople.length ? <><p className="detail-total">共 {detailPeople.length} 人</p><div className="detail-list">{detailPeople.slice(0, detailVisibleCount).map(person => <article key={`${person.region}-${person.voice}-${person.participant_name}`}><strong>{person.participant_name}</strong></article>)}</div>{detailVisibleCount < detailPeople.length && <button className="detail-more" type="button" onClick={() => setDetailVisibleCount(count => count + 15)}>顯示更多</button>}</> : <p className="detail-empty">目前還沒有名單。</p>}</section></div>}
     </main>

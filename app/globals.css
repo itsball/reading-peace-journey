@@ -27,6 +27,8 @@ nav a { font-size:13px; font-weight:700; }
 .section { padding:100px 8vw; position:relative; }
 .section-heading { max-width:650px; margin-bottom:45px; }
 .section-heading h2,.book h2 { font-size:clamp(39px,5vw,68px); margin:8px 0; line-height:1.18; }
+.book h2 { font-size:clamp(34px,4vw,58px); }
+.book-title-line { display:block; white-space:nowrap; }
 .section-heading>p:last-child { color:#587068; font-size:17px; }
 .checkin { display:grid; grid-template-columns:minmax(0,860px); justify-content:center; gap:30px; background-color:var(--paper); background-image:linear-gradient(transparent 96%,rgba(43,43,37,.09) 96%); background-size:100% 30px; }
 .checkin::after { content:"❧"; position:absolute; right:6vw; top:55px; font-size:100px; color:rgba(46,112,87,.13); transform:rotate(25deg); }
