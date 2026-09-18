@@ -116,7 +116,22 @@ export default function Home() {
       const image = new Image();
       image.src = `/keepsake-${item.at}-illustration.png`;
     });
-    if (isDemo) setStats({ weeklyPartners: 32, total: 231, groupChapter: 10, totalRounds: 20, completedReaders: 20, chapterCounts: [38, 36, 34, 32, 30, 28, 26, 24, 22, 20] });
+    if (isDemo) {
+      setStats({ weeklyPartners: 32, total: 231, groupChapter: 10, totalRounds: 20, completedReaders: 20, chapterCounts: [38, 36, 34, 32, 30, 28, 26, 24, 22, 20] });
+      setName("測試團員 01");
+      setPersonalProgress({
+        progress: 100,
+        readChapters: [1,2,3,4,5,6,7,8,9,10],
+        totalCheckins: 12,
+        completionRounds: 1,
+        reflections: [
+          { chapter: 1, text: "從故事的起點看見，在陌生與不安中仍然可以選擇承擔。閱讀後更能理解老師當時踏上旅程所需要的勇氣。", createdAt: Date.now() - 9 * 86400000 },
+          { chapter: 4, text: "真正的和平不是逃避困難，而是在混亂中仍願意保護生命、理解別人。這一章讓我重新思考勇敢的意義。", createdAt: Date.now() - 6 * 86400000 },
+          { chapter: 7, text: "愛不是抽象的口號，而是在最艱難的時候仍做出對生命有益的選擇。希望自己也能把這份精神帶進日常。", createdAt: Date.now() - 3 * 86400000 },
+          { chapter: 10, text: "讀完整本書後，更明白我們明年要演唱的不只是旋律，而是一段關於生命、信仰、愛與和平的見證。", createdAt: Date.now() },
+        ],
+      });
+    }
     else fetch("/api/checkins").then(response => response.json()).then(setStats).catch(() => undefined);
     fetch("/api/roster").then(response => response.json()).then(data => setRoster(Array.isArray(data.members) ? data.members : [])).catch(() => setMessage("名冊載入失敗，請重新整理頁面。"));
   }, []);
