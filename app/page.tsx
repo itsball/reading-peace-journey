@@ -313,7 +313,7 @@ export default function Home() {
     ctx.fillStyle = "#6c674f"; ctx.font = `700 25px ${sans}`; ctx.fillText("謹頒此狀予", 768, 385);
     ctx.fillStyle = "#292d24"; ctx.font = `900 72px ${sans}`; ctx.fillText(name.trim() || "閱讀夥伴", 768, 480);
     ctx.font = `650 31px ${sans}`; ctx.fillText("完成《戰爭是殘忍的。愛與和平》全書閱讀旅程", 768, 565);
-    ctx.font = `500 26px ${sans}`; ctx.fillStyle = "#5e6251"; ctx.fillText("以閱讀走近故事，以理解預備明年的獻上", 768, 625);
+    ctx.font = `500 26px ${sans}`; ctx.fillStyle = "#5e6251"; ctx.fillText("以閱讀更瞭解體會老師，為預備音樂會來獻上榮耀", 768, 625);
     ctx.fillStyle = "#292d24"; ctx.font = `700 21px ${sans}`; ctx.fillText("OCTOBER 2026  ·  READING COMPLETION", 768, 710);
     ctx.fillStyle = "#6f4837"; ctx.font = `900 36px ${sans}`; ctx.fillText("完讀", 768, 872); ctx.font = `800 20px ${sans}`; ctx.fillText("100%", 768, 906);
     await deliverCanvas(canvas, filename, "CGM完讀獎狀", delivery);
