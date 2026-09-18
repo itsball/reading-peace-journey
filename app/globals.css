@@ -160,7 +160,7 @@ footer span { font-weight:400; color:#c3d8cd; }
 .celebration-card::before,.celebration-card::after { content:"✦"; position:absolute; top:18px; color:#b88624; font-size:25px; }
 .celebration-card::before { left:22px; }.celebration-card::after { right:22px; }
 .celebration-card>p { margin:0 0 18px; color:#6d5a2c; font:800 12px "Noto Sans TC",sans-serif; letter-spacing:.16em; }
-.celebration-seal { width:145px; height:145px; margin:0 auto 18px; display:grid; place-content:center; border:2px solid #b88624; border-radius:50%; background:radial-gradient(circle,#fff4c8 0 48%,#d9a82f 49% 52%,#52603e 53% 100%); color:white; box-shadow:0 0 0 7px rgba(184,134,36,.2),0 0 34px rgba(255,211,82,.6); }
+.celebration-seal { width:145px; height:145px; margin:0 auto 18px; display:grid; place-content:center; border:2px solid #b88624; border-radius:50%; background:radial-gradient(circle,#fff4c8 0 48%,#d9a82f 49% 52%,#52603e 53% 100%); color:#35402d; box-shadow:0 0 0 7px rgba(184,134,36,.2),0 0 34px rgba(255,211,82,.6); }
 .celebration-seal small,.celebration-seal strong,.celebration-seal span { display:block; font-family:"Noto Sans TC",sans-serif; }
 .celebration-seal small { font-size:10px; }.celebration-seal strong { font-size:36px; line-height:1.1; }.celebration-seal span { font-size:12px; font-weight:900; }
 .celebration-card h2 { margin:0; color:#292d24; font-size:clamp(38px,7vw,62px); line-height:1.08; }
