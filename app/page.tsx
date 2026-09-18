@@ -23,8 +23,8 @@ const rewardByChapter: Record<number, string> = { 3: "25% 箴言卡", 5: "50% �
 const boardPosition = (index: number) => index < 5 ? { gridColumn: index + 1, gridRow: 1 } : { gridColumn: 10 - index, gridRow: 2 };
 const makeDemoPeople = (count: number): DetailPerson[] => Array.from({ length: count }, (_, index) => ({ participant_name: `測試團員 ${String(index + 1).padStart(2, "0")}`, region: "", voice: "", count: 1 }));
 const celebrationCopy: Record<number, { chapters: number; books: number; label: string; note: string }> = {
-  25: { chapters: 280, books: 28, label: "共同啟程", note: "每一次翻頁，都讓我們更靠近故事的心。" },
-  50: { chapters: 560, books: 56, label: "走過一半", note: "因為彼此的投入，閱讀旅程正在發光。" },
+  25: { chapters: 280, books: 28, label: "共同啟程", note: "每一次翻頁，都讓我們更靠近老師。" },
+  50: { chapters: 560, books: 56, label: "走過一半", note: "越是了解故事，越想帶著火熱的內心來見證。" },
   75: { chapters: 840, books: 84, label: "榮耀前行", note: "我們帶著理解與感動，繼續向目標前進。" },
   100: { chapters: 1120, books: 112, label: "共同完成", note: "以閱讀更瞭解體會老師，為預備音樂會來獻上榮耀。" },
 };
