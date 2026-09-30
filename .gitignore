@@ -43,4 +43,5 @@ yarn-error.log*
 /card-previews/
 /render_card_previews.py
 /.openai/site-version-*.tar.gz
+site-*.tar.gz
 /.publish-git/
