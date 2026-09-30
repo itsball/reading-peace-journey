@@ -1,0 +1,80 @@
+export default {
+  "bootstrapScriptContent": "import(\"/_next/static/chunks/index-B6DyR57s.js\")",
+  "clientReferenceDeps": {
+    "009ec46bb0c1": {
+      "js": [
+        "/_next/static/chunks/AdminDashboard-N5cdF9ne.js",
+        "/_next/static/chunks/rolldown-runtime-C60lm6uB.js",
+        "/_next/static/chunks/framework-BgSIrAUN.js",
+        "/_next/static/chunks/index-B6DyR57s.js"
+      ],
+      "css": []
+    },
+    "6efdf509a785": {
+      "js": [
+        "/_next/static/chunks/page-Dk6R5Zyn.js",
+        "/_next/static/chunks/rolldown-runtime-C60lm6uB.js",
+        "/_next/static/chunks/framework-BgSIrAUN.js",
+        "/_next/static/chunks/index-B6DyR57s.js"
+      ],
+      "css": []
+    },
+    "105d30f76def": {
+      "js": [
+        "/_next/static/chunks/index-B6DyR57s.js",
+        "/_next/static/chunks/rolldown-runtime-C60lm6uB.js",
+        "/_next/static/chunks/framework-BgSIrAUN.js"
+      ],
+      "css": []
+    },
+    "a4f9a8437bde": {
+      "js": [
+        "/_next/static/chunks/index-B6DyR57s.js",
+        "/_next/static/chunks/rolldown-runtime-C60lm6uB.js",
+        "/_next/static/chunks/framework-BgSIrAUN.js"
+      ],
+      "css": []
+    },
+    "99e50bc1c07a": {
+      "js": [
+        "/_next/static/chunks/index-B6DyR57s.js",
+        "/_next/static/chunks/rolldown-runtime-C60lm6uB.js",
+        "/_next/static/chunks/framework-BgSIrAUN.js"
+      ],
+      "css": []
+    },
+    "4b5af17387c6": {
+      "js": [
+        "/_next/static/chunks/index-B6DyR57s.js",
+        "/_next/static/chunks/rolldown-runtime-C60lm6uB.js",
+        "/_next/static/chunks/framework-BgSIrAUN.js"
+      ],
+      "css": []
+    },
+    "e159047a93f1": {
+      "js": [
+        "/_next/static/chunks/layout-segment-context-Ci9uPEQV.js",
+        "/_next/static/chunks/rolldown-runtime-C60lm6uB.js",
+        "/_next/static/chunks/index-B6DyR57s.js",
+        "/_next/static/chunks/framework-BgSIrAUN.js"
+      ],
+      "css": []
+    },
+    "43ff2fb034b8": {
+      "js": [
+        "/_next/static/chunks/index-B6DyR57s.js",
+        "/_next/static/chunks/rolldown-runtime-C60lm6uB.js",
+        "/_next/static/chunks/framework-BgSIrAUN.js"
+      ],
+      "css": []
+    }
+  },
+  "serverResources": {
+    "app/layout.tsx": {
+      "js": [],
+      "css": [
+        "/_next/static/css/index.uGE_TyBH.css"
+      ]
+    }
+  }
+}

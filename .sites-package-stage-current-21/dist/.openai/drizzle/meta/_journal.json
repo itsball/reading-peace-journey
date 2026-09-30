@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1787880000000,
+      "tag": "0000_reading_checkins",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1787882400000,
+      "tag": "0001_roster_members",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1789610400000,
+      "tag": "0002_reading_completions",
+      "breakpoints": true
+    }
+  ]
+}
